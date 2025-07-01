@@ -19,6 +19,7 @@ struct Question {
 
 struct DogView: View {
     @StateObject private var viewModel: DogViewModel
+    @State private var showResetAlert = false
     
     init(useCase: DogUseCaseProtocol) {
         _viewModel = StateObject(wrappedValue: DogViewModel(useCase: useCase))
@@ -60,6 +61,14 @@ struct DogView: View {
             viewModel.onAppear()
         }
         .preferredColorScheme(.light)
+        .alert("Reset Quiz", isPresented: $showResetAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset", role: .destructive) {
+                viewModel.resetQuiz()
+            }
+        } message: {
+            Text("Are you sure you want to start over? Your current progress will be lost.")
+        }
     }
     
     private var headerView: some View {
@@ -74,6 +83,21 @@ struct DogView: View {
             Spacer()
             
             HStack(spacing: 16) {
+                // Counter
+                HStack(spacing: 4) {
+                    Image(systemName: "list.number")
+                        .foregroundColor(.blue)
+                        .font(.caption)
+                    Text("\(viewModel.currentQuestion + 1)/\(viewModel.questions.count)")
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.blue)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color.blue.opacity(0.1))
+                .clipShape(Capsule())
+                
                 // Score
                 HStack(spacing: 4) {
                     Image(systemName: "star.fill")
@@ -88,6 +112,20 @@ struct DogView: View {
                 .background(Color.white)
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.1), radius: 2)
+            }
+            
+            // Reset
+            HStack(spacing: 12) {
+                Button(action: {
+                    showResetAlert = true
+                }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+                .padding(8)
+                .background(Color.red.opacity(0.1))
+                .clipShape(Circle())
             }
         }
         .padding(.horizontal, 24)
