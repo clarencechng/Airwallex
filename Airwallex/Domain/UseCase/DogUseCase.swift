@@ -8,7 +8,8 @@
 import Foundation
 
 protocol DogUseCaseProtocol {
-    func getDogBreed() async throws -> Dog
+    func getDogBreed() async throws -> DogBreed
+    func getDogImageURL(breed: String, subType: String?) async throws -> String
 }
 
 final class DogUseCase: DogUseCaseProtocol {
@@ -18,7 +19,11 @@ final class DogUseCase: DogUseCaseProtocol {
         self.repository = repository
     }
     
-    func getDogBreed() async throws -> Dog {
+    func getDogBreed() async throws -> DogBreed {
         return try await repository.getDogBreed()
+    }
+    
+    func getDogImageURL(breed: String, subType: String?) async throws -> String {
+        return try await repository.getDogImageURL(breed: breed, subType: subType)
     }
 }

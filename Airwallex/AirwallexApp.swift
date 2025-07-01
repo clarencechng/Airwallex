@@ -11,7 +11,12 @@ import SwiftUI
 struct AirwallexApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+//            ContentView()
+            
+            let apiService = DogAPIService()
+            let repository = DogRepository(apiService: apiService)
+            let useCase = DogUseCase(repository: repository)
+            DogView(useCase: useCase)
         }
     }
 }
