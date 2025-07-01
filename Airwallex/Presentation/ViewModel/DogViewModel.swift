@@ -24,7 +24,11 @@ final class DogViewModel: ObservableObject {
     @Published var dogsData: DogBreed? = nil
     @Published var formattedDogBreeds: [(String, String?)] = []
     @Published var chosenDogs: [(String, String?)] = []
+    @Published var showQuizComplete = false
     
+    var isQuizComplete: Bool {
+        return currentQuestion >= questions.count - 1 && showResult
+    }
     
     var isDataReady: Bool {
         !isLoading && !questions.isEmpty && loadingError == nil
@@ -47,6 +51,8 @@ final class DogViewModel: ObservableObject {
         isLoading = true
         loadingError = nil
         questions = []
+        formattedDogBreeds = []
+        chosenDogs = []
         
         Task {
             do {
@@ -137,10 +143,11 @@ final class DogViewModel: ObservableObject {
     func nextQuestion() {
         if currentQuestion < questions.count - 1 {
             currentQuestion += 1
+            showResult = false
         } else {
             currentQuestion = 0
+            showQuizComplete = true
         }
-        showResult = false
     }
     
     func resetQuiz() {
@@ -148,5 +155,10 @@ final class DogViewModel: ObservableObject {
         score = 0
         showResult = false
         showCelebration = false
+        showQuizComplete = false
+        
+        Task {
+            await getDogBreed()
+        }
     }
 }
