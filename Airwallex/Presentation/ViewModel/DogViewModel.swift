@@ -20,10 +20,7 @@ final class DogViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var loadingError: String? = nil
     @Published var questions: [Question] = []
-    
-    @Published var dogsData: DogBreed? = nil
-    @Published var formattedDogBreeds: [(String, String?)] = []
-    @Published var chosenDogs: [(String, String?)] = []
+
     @Published var showQuizComplete = false
     
     var isQuizComplete: Bool {
@@ -51,15 +48,12 @@ final class DogViewModel: ObservableObject {
         isLoading = true
         loadingError = nil
         questions = []
-        formattedDogBreeds = []
-        chosenDogs = []
         
         Task {
             do {
                 let data = try await useCase.getDogBreed()
-                dogsData = data
                 
-                try await handleData()
+                try await handleData(dogsData: data)
                 
                 isLoading = false
             } catch {
@@ -78,16 +72,15 @@ final class DogViewModel: ObservableObject {
         }
     }
     
-    private func handleData() async throws  {
+    private func handleData(dogsData: DogBreed?) async throws {
         guard let dogsData else {
             loadingError = "Failed to load data. Please try again."
             isLoading = false
-            
             return
         }
-        
-        formattedDogBreeds = []
-        
+
+        var formattedDogBreeds: [(String, String?)] = []
+
         for (breed, subtypes) in dogsData.message {
             if subtypes.isEmpty {
                 formattedDogBreeds.append((breed, nil))
@@ -97,32 +90,41 @@ final class DogViewModel: ObservableObject {
                 }
             }
         }
-        
-        chosenDogs = Array(formattedDogBreeds.shuffled().prefix(10))
-        
-        for (breed, subType) in chosenDogs {
-            let imageURL = try await useCase.getDogImageURL(breed: breed, subType: subType)
-            
-            let correctAnswer = dogBreedFormatter(breed: breed, subType: subType)
-            
-            let incorrectOptions = formattedDogBreeds
-                .filter { dogBreedFormatter(breed: $0.0, subType: $0.1) != correctAnswer }
-                .map { dogBreedFormatter(breed: $0.0, subType: $0.1) }
-                .shuffled().prefix(3)
-            
-            let correctAnswerIndex = Int.random(in: 0...3)
-            var options = Array(incorrectOptions)
-            options.insert(correctAnswer, at: correctAnswerIndex)
-            
-            let question = Question(
-                imageName: imageURL,
-                options: options,
-                correctAnswerIndex: correctAnswerIndex
-            )
-            
-            questions.append(question)
+
+        let chosenDogs = Array(formattedDogBreeds.shuffled().prefix(10))
+        let allBreedsFormatted = formattedDogBreeds.map { dogBreedFormatter(breed: $0.0, subType: $0.1) }
+
+        try await withThrowingTaskGroup(of: Question?.self) { group in
+            for (breed, subType) in chosenDogs {
+                group.addTask {
+                    let imageURL = try await self.useCase.getDogImageURL(breed: breed, subType: subType)
+                    let correctAnswer = await self.dogBreedFormatter(breed: breed, subType: subType)
+
+                    let incorrectOptions = allBreedsFormatted
+                        .filter { $0 != correctAnswer }
+                        .shuffled()
+                        .prefix(3)
+
+                    var options = Array(incorrectOptions)
+                    let correctAnswerIndex = Int.random(in: 0...3)
+                    options.insert(correctAnswer, at: correctAnswerIndex)
+
+                    return Question(
+                        imageName: imageURL,
+                        options: options,
+                        correctAnswerIndex: correctAnswerIndex
+                    )
+                }
+            }
+
+            for try await question in group {
+                if let q = question {
+                    questions.append(q)
+                }
+            }
         }
     }
+
     
     func onAppear() {
         if questions.isEmpty {
