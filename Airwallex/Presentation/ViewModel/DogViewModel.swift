@@ -9,7 +9,6 @@ import Foundation
 
 @MainActor
 final class DogViewModel: ObservableObject {
-    
     @Published var currentQuestion = 0
     @Published var score = 0
     @Published var showResult = false
@@ -23,14 +22,6 @@ final class DogViewModel: ObservableObject {
 
     @Published var showQuizComplete = false
     
-    var isQuizComplete: Bool {
-        return currentQuestion >= questions.count - 1 && showResult
-    }
-    
-    var isDataReady: Bool {
-        !isLoading && !questions.isEmpty && loadingError == nil
-    }
-    
     var currentQuestionData: Question? {
         guard !questions.isEmpty, currentQuestion < questions.count else {
             return nil
@@ -43,7 +34,53 @@ final class DogViewModel: ObservableObject {
     init(useCase: DogUseCaseProtocol) {
         self.useCase = useCase
     }
+}
+
+// MARK: Public
+
+extension DogViewModel {
+    func onAppear() {
+        if questions.isEmpty {
+            Task { await getDogBreed() }
+        }
+    }
     
+    func handleAnswer(selectedIndex: Int) {
+        selectedAnswerIndex = selectedIndex
+        showResult = true
+        
+        if selectedIndex == currentQuestionData?.correctAnswerIndex {
+            score += 1
+            showCelebration = true
+        }
+    }
+    
+    func nextQuestion() {
+        if currentQuestion < questions.count - 1 {
+            currentQuestion += 1
+            showResult = false
+        } else {
+            currentQuestion = 0
+            showQuizComplete = true
+        }
+    }
+    
+    func resetQuiz() {
+        currentQuestion = 0
+        score = 0
+        showResult = false
+        showCelebration = false
+        showQuizComplete = false
+        
+        Task {
+            await getDogBreed()
+        }
+    }
+}
+
+// MARK: Private
+
+extension DogViewModel {
     private func getDogBreed() async {
         isLoading = true
         loadingError = nil
@@ -120,45 +157,6 @@ final class DogViewModel: ObservableObject {
                     questions.append(q)
                 }
             }
-        }
-    }
-
-    
-    func onAppear() {
-        if questions.isEmpty {
-            Task { await getDogBreed() }
-        }
-    }
-    
-    func handleAnswer(selectedIndex: Int) {
-        selectedAnswerIndex = selectedIndex
-        showResult = true
-        
-        if selectedIndex == currentQuestionData?.correctAnswerIndex {
-            score += 1
-            showCelebration = true
-        }
-    }
-    
-    func nextQuestion() {
-        if currentQuestion < questions.count - 1 {
-            currentQuestion += 1
-            showResult = false
-        } else {
-            currentQuestion = 0
-            showQuizComplete = true
-        }
-    }
-    
-    func resetQuiz() {
-        currentQuestion = 0
-        score = 0
-        showResult = false
-        showCelebration = false
-        showQuizComplete = false
-        
-        Task {
-            await getDogBreed()
         }
     }
 }
