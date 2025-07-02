@@ -86,7 +86,9 @@ struct DogView: View {
                     total: viewModel.questions.count,
                     celebrationScale: viewModel.celebrationScale,
                     onPlayAgain: {
-                        viewModel.resetQuiz()
+                        Task {
+                            await viewModel.resetQuiz()
+                        }
                     }
                 )
                 .onAppear {
@@ -96,18 +98,24 @@ struct DogView: View {
             
             if let error = viewModel.loadingError, viewModel.questions.isEmpty {
                 ErrorView(errorMessage: error) {
-                    viewModel.resetQuiz()
+                    Task {
+                        await viewModel.resetQuiz()
+                    }
                 }
             }
         }
         .onAppear() {
-            viewModel.onAppear()
+            Task {
+                await viewModel.onAppear()
+            }
         }
         .preferredColorScheme(.light)
         .alert("Reset Quiz", isPresented: $showResetAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Reset", role: .destructive) {
-                viewModel.resetQuiz()
+                Task {
+                    await viewModel.resetQuiz()
+                }
             }
         } message: {
             Text("Are you sure you want to start over? Your current progress will be lost.")

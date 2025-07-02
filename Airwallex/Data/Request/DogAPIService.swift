@@ -33,14 +33,14 @@ final class DogAPIService: DogAPIServiceProtocol {
         }
         
         guard let url = URL(string: urlString) else {
-            return ""
+            throw URLError(.badURL)
         }
         
         let (data, response) = try await URLSession.shared.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse,
               httpResponse.statusCode == 200 else {
-            return ""
+            throw URLError(.badServerResponse)
         }
         
         let decodedData = try JSONDecoder().decode(DogImage.self, from: data)

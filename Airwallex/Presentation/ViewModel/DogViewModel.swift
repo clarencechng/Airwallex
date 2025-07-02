@@ -39,9 +39,9 @@ final class DogViewModel: ObservableObject {
 // MARK: Public
 
 extension DogViewModel {
-    func onAppear() {
+    func onAppear() async {
         if questions.isEmpty {
-            Task { await getDogBreed() }
+            await getDogBreed()
         }
     }
     
@@ -65,16 +65,15 @@ extension DogViewModel {
         }
     }
     
-    func resetQuiz() {
+    func resetQuiz() async {
         currentQuestion = 0
         score = 0
         showResult = false
         showCelebration = false
         showQuizComplete = false
         
-        Task {
-            await getDogBreed()
-        }
+        await getDogBreed()
+        
     }
 }
 
@@ -86,16 +85,14 @@ extension DogViewModel {
         loadingError = nil
         questions = []
         
-        Task {
-            do {
-                let data = try await useCase.getDogBreed()
-                try await handleData(dogsData: data)
-                isLoading = false
-            } catch {
-                // Handle error here
-                loadingError = "Failed to load data. Please try again."
-                isLoading = false
-            }
+        do {
+            let data = try await useCase.getDogBreed()
+            try await handleData(dogsData: data)
+            isLoading = false
+        } catch {
+            // Handle error here
+            loadingError = "Failed to load data. Please try again."
+            isLoading = false
         }
     }
     
