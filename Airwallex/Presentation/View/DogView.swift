@@ -35,7 +35,15 @@ struct DogView: View {
             .ignoresSafeArea()
             
             VStack(spacing: 10) {
-                headerView
+                HeaderView(
+                    title: "Guess the Breed!",
+                    currentQuestion: viewModel.currentQuestion,
+                    totalQuestions: viewModel.questions.count,
+                    score: viewModel.score,
+                    onReset: {
+                        showResetAlert = true
+                    }
+                )
                 
                 ScrollView {
                     VStack(spacing: 24) {
@@ -79,67 +87,6 @@ struct DogView: View {
         } message: {
             Text("Are you sure you want to start over? Your current progress will be lost.")
         }
-    }
-    
-    private var headerView: some View {
-        HStack {
-            HStack(spacing: 8) {
-                Text("Guess the Breed!")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-            }
-            
-            Spacer()
-            
-            HStack(spacing: 16) {
-                // Counter
-                HStack(spacing: 4) {
-                    Image(systemName: "list.number")
-                        .foregroundColor(.blue)
-                        .font(.caption)
-                    Text("\(viewModel.currentQuestion + 1)/\(viewModel.questions.count)")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.blue)
-                }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
-                .background(Color.blue.opacity(0.1))
-                .clipShape(Capsule())
-                
-                // Score
-                HStack(spacing: 4) {
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
-                        .font(.caption)
-                    Text("\(viewModel.score)")
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.white)
-                .clipShape(Capsule())
-                .shadow(color: .black.opacity(0.1), radius: 2)
-            }
-            
-            // Reset
-            HStack(spacing: 12) {
-                Button(action: {
-                    showResetAlert = true
-                }) {
-                    Image(systemName: "arrow.clockwise")
-                        .font(.caption)
-                        .foregroundColor(.red)
-                }
-                .padding(8)
-                .background(Color.red.opacity(0.1))
-                .clipShape(Circle())
-            }
-        }
-        .padding(.horizontal, 24)
-        .padding(.top, 8)
     }
     
     private var dogImageView: some View {
