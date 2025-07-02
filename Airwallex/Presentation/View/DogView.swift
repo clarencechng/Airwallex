@@ -62,7 +62,22 @@ struct DogView: View {
             }
             
             if viewModel.showCelebration {
-                celebrationOverlay
+                CorrectAnswerView(
+                    celebrationScale: viewModel.celebrationScale,
+                    onDismiss: {
+                        viewModel.showCelebration = false
+                    }
+                )
+                .onAppear {
+                    viewModel.celebrationScale = 1.0
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        viewModel.showCelebration = false
+                    }
+                }
+                .onDisappear {
+                    viewModel.celebrationScale = 0.1
+                }
             }
             
             if viewModel.showQuizComplete {
@@ -225,47 +240,6 @@ struct DogView: View {
         }
         .scaleEffect(viewModel.showResult ? 1.0 : 0.95)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewModel.showResult)
-    }
-    
-    private var celebrationOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.3)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    viewModel.showCelebration = false
-                }
-            
-            VStack(spacing: 16) {
-                Text("🎉")
-                    .font(.system(size: 60))
-                    .scaleEffect(viewModel.celebrationScale)
-                    .animation(.spring(response: 0.5, dampingFraction: 0.6), value: viewModel.celebrationScale)
-                
-                Text("🎉 Congratulations! 🎉")
-                    .font(.title)
-                    .fontWeight(.bold)
-                    .foregroundColor(.green)
-                
-                Text("Correct Answer!")
-                    .font(.body)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(32)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 24))
-            .shadow(color: .black.opacity(0.2), radius: 20)
-        }
-        .onAppear {
-            viewModel.celebrationScale = 1.0
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                viewModel.showCelebration = false
-            }
-        }
-        .onDisappear {
-            viewModel.celebrationScale = 0.1
-        }
     }
     
     private func backgroundColorForOption(at index: Int, currentQuestion: Question) -> Color {
