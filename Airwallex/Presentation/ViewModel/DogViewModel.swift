@@ -52,9 +52,7 @@ final class DogViewModel: ObservableObject {
         Task {
             do {
                 let data = try await useCase.getDogBreed()
-                
                 try await handleData(dogsData: data)
-                
                 isLoading = false
             } catch {
                 // Handle error here

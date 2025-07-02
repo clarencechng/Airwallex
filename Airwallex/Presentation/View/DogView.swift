@@ -60,6 +60,10 @@ struct DogView: View {
             if viewModel.showQuizComplete {
                 quizCompleteOverlay
             }
+            
+            if let error = viewModel.loadingError, viewModel.questions.isEmpty {
+                errorView(error)
+            }
         }
         .onAppear() {
             viewModel.onAppear()
@@ -72,6 +76,41 @@ struct DogView: View {
             }
         } message: {
             Text("Are you sure you want to start over? Your current progress will be lost.")
+        }
+    }
+    
+    private func errorView(_ errorMessage: String) -> some View {
+        ZStack {
+            Color.white.opacity(0.9)
+                .ignoresSafeArea(.all)
+                .animation(.easeInOut(duration: 0.3), value: viewModel.showQuizComplete)
+            
+            VStack(spacing: 32) {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: 60))
+                    .foregroundColor(.red)
+                
+                Text(viewModel.loadingError ?? "Something went wrong! Please try again later.")
+                    .multilineTextAlignment(.center)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                
+                Text(errorMessage)
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 32)
+                
+                Button("Try Again") {
+                    viewModel.resetQuiz()
+                }
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 16)
+                .background(Color.blue)
+                .clipShape(Capsule())
+            }
         }
     }
     
